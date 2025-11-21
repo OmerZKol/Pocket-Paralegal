@@ -44,3 +44,5 @@ app-example
 .vscode/
 *.apk
 .DS_Store
+CRASH_ANALYSIS.md
+MEMORY_MANAGEMENT.md
