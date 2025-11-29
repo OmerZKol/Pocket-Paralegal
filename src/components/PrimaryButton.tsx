@@ -45,21 +45,20 @@ export function PrimaryButton({ onPress, disabled, text }: PrimaryButtonProps) {
 
 const styles = StyleSheet.create({
   scanButton: {
-    backgroundColor: '#3498db',
+    backgroundColor: '#1a2332', // Professional navy blue
     paddingVertical: 16,
     paddingHorizontal: 32,
-    borderRadius: 12,
-    marginTop: 20,
-    minWidth: 250,
-    elevation: 3,
+    borderRadius: 8,
+    marginTop: 0,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   scanButtonDisabled: {
-    backgroundColor: '#95a5a6',
-    opacity: 0.6,
+    backgroundColor: '#9ca3af',
+    opacity: 0.7,
     elevation: 0,
     shadowOpacity: 0,
   },
@@ -73,8 +72,8 @@ const styles = StyleSheet.create({
   },
   scanButtonText: {
     color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '600',
     textAlign: 'center',
   },
 });
