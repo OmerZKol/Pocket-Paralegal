@@ -100,16 +100,19 @@ export function ReviewScreen({
               onPress={onAddPage}
               disabled={false}
               text="Take Photo"
+              icon="camera"
             />
             <PrimaryButton
               onPress={onAddFromGallery}
               disabled={false}
-              text="From Gallery"
+              text="Add from Gallery"
+              icon="image"
             />
             <PrimaryButton
               onPress={onAddFromFile}
               disabled={false}
-              text="Select File (PDF)"
+              text="Add File (PDF)"
+              icon="file-pdf"
             />
           </View>
         </View>
@@ -269,7 +272,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: '#cccccc',
   },
   buttonRow: {
     flexDirection: 'row',

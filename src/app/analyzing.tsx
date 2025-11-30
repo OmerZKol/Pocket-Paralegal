@@ -5,6 +5,7 @@ import { useRouter, Href } from 'expo-router';
 import { LLMModule } from 'react-native-executorch';
 import { useAppContext } from '../contexts/AppContext';
 import { AVAILABLE_MODELS } from '../constants/models';
+import { Prompts } from '../constants/prompt';
 
 export default function Analyzing() {
   const router = useRouter();
@@ -74,25 +75,11 @@ export default function Analyzing() {
           console.log(`[ANALYSIS] Analyzing combined text, length: ${text.length}`);
 
           // System prompt - Defines the AI's role and behavior
-          const systemPrompt = `You are an expert lawyer specialized in contract analysis. Your role is to review contracts and identify potential risks, hidden clauses, and problematic terms that could negatively impact the signing party.`;
+          // const systemPrompt = `You are an expert lawyer specialized in contract analysis. Your role is to review contracts and identify potential risks, hidden clauses, and problematic terms that could negatively impact the signing party.`;
 
           // User prompt with the actual contract text
-          const userPrompt = `Review the following contract text and identify exactly 3 risky clauses (e.g., hidden fees, unfavorable terms, data privacy issues, arbitration clauses, liability limitations, termination conditions).
-
-Format your response as:
-
-**Summary**
-[Brief 1-2 sentence overview of the contract's overall risk level]
-
-**Potential Risks**
-- [Risk 1 with explanation]
-- [Risk 2 with explanation]
-- [Risk 3 with explanation]
-
-Contract Text:
-"""
-${text.substring(0, 6000)}
-"""`;
+          const systemPrompt = Prompts.basicPrompt;
+          const userPrompt = text;
 
           const messages = [
             { role: 'system' as const, content: systemPrompt },

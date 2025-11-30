@@ -17,57 +17,61 @@ export function ResultsScreen({
   onBack,
   onStartOver,
 }: ResultsScreenProps) {
-  // Parse the report to separate risks and warnings
   const insets = useSafeAreaInsets();
+
+  // Parse the new markdown-formatted report
   const parseReport = (report: string) => {
     const lines = report.split('\n');
+    let documentType = '';
     let summary = '';
-    const risks: string[] = [];
-    const warnings: string[] = [];
-    let currentSection = 'summary';
+    const criticalClauses: string[] = [];
+    const recommendedAdditions: string[] = [];
+    let currentSection = 'none';
 
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed) continue;
 
-      // Detect section headers
-      if (trimmed.toLowerCase().includes('risk') && trimmed.length < 50) {
-        currentSection = 'risks';
-        continue;
-      } else if (trimmed.toLowerCase().includes('warning') && trimmed.length < 50) {
-        currentSection = 'warnings';
-        continue;
-      } else if (trimmed.toLowerCase().includes('summary') && trimmed.length < 50) {
-        currentSection = 'summary';
+      // Detect H2 heading: ## Document Analysis: [Type]
+      if (trimmed.startsWith('## Document Analysis:')) {
+        documentType = trimmed.replace('## Document Analysis:', '').trim();
         continue;
       }
 
-      // Parse bullet points
+      // Detect H3 section headers
+      if (trimmed.startsWith('### Summary')) {
+        currentSection = 'summary';
+        continue;
+      } else if (trimmed.startsWith('### Critical Missing Clauses')) {
+        currentSection = 'critical';
+        continue;
+      } else if (trimmed.startsWith('### Recommended Additions')) {
+        currentSection = 'recommended';
+        continue;
+      }
+
+      // Parse bullet points with bold clause names: * **[Name]**: Description
       if (trimmed.startsWith('*') || trimmed.startsWith('-')) {
         const text = trimmed.substring(1).trim();
-        if (currentSection === 'risks') {
-          risks.push(text);
-        } else if (currentSection === 'warnings') {
-          warnings.push(text);
-        }
-      } else if (/^\d+\./.test(trimmed)) {
-        const match = trimmed.match(/^\d+\.\s*(.*)$/);
-        if (match) {
-          if (currentSection === 'risks') {
-            risks.push(match[1]);
-          } else if (currentSection === 'warnings') {
-            warnings.push(match[1]);
-          }
+        if (currentSection === 'critical') {
+          criticalClauses.push(text);
+        } else if (currentSection === 'recommended') {
+          recommendedAdditions.push(text);
         }
       } else if (currentSection === 'summary') {
         summary += trimmed + ' ';
       }
     }
 
-    return { summary: summary.trim(), risks, warnings };
+    return {
+      documentType: documentType || 'Contract Analysis',
+      summary: summary.trim(),
+      criticalClauses,
+      recommendedAdditions
+    };
   };
 
-  const { summary, risks, warnings } = parseReport(riskReport);
+  const { documentType, summary, criticalClauses, recommendedAdditions } = parseReport(riskReport);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -84,57 +88,97 @@ export function ResultsScreen({
       </View>
 
       <ScrollView style={styles.content}>
+        {/* Document Type Header */}
+        {documentType && (
+          <View style={styles.documentTypeCard}>
+            <View style={styles.cardHeaderTop}>
+              <Ionicons name="document" size={20} color="#d4a574" />
+              <Text style={styles.documentTypeText}>{documentType}</Text>
+            </View>
+          </View>
+        )}
+
         {/* Summary Section */}
         {summary && (
           <View style={styles.summaryCard}>
             <View style={styles.cardHeader}>
-              <Ionicons name="document-text-outline" size={20} color="#1a2332" />
+              <Ionicons name="information-circle-outline" size={20} color="#1a2332" />
               <Text style={styles.cardTitle}>Summary</Text>
             </View>
             <Text style={styles.summaryText}>{summary}</Text>
           </View>
         )}
 
-        {/* Risks Section */}
-        {risks.length > 0 && (
+        {/* Critical Missing Clauses Section */}
+        {criticalClauses.length > 0 && (
           <View style={styles.riskCard}>
             <View style={styles.cardHeader}>
               <Ionicons name="warning" size={20} color="#dc2626" />
-              <Text style={styles.riskTitle}>Potential Risks</Text>
+              <Text style={styles.riskTitle}>Critical Missing Clauses</Text>
               <View style={styles.countBadge}>
-                <Text style={styles.badgeText}>{risks.length} found</Text>
+                <Text style={styles.badgeText}>{criticalClauses.length}</Text>
               </View>
             </View>
-            {risks.map((risk, index) => (
-              <View key={index} style={styles.bulletItem}>
-                <View style={styles.bulletDot} />
-                <Text style={styles.bulletText}>{risk}</Text>
-              </View>
-            ))}
+            {criticalClauses.map((clause, index) => {
+              // Parse bold clause name: **[Name]**: Description
+              const match = clause.match(/^\*\*(.+?)\*\*:\s*(.+)$/);
+              if (match) {
+                return (
+                  <View key={index} style={styles.clauseItem}>
+                    <View style={styles.bulletDot} />
+                    <View style={styles.clauseContent}>
+                      <Text style={styles.clauseName}>{match[1]}</Text>
+                      <Text style={styles.clauseDescription}>{match[2]}</Text>
+                    </View>
+                  </View>
+                );
+              }
+              return (
+                <View key={index} style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+                  <Text style={styles.bulletText}>{clause}</Text>
+                </View>
+              );
+            })}
           </View>
         )}
 
-        {/* Warnings Section */}
-        {warnings.length > 0 && (
+        {/* Recommended Additions Section */}
+        {recommendedAdditions.length > 0 && (
           <View style={styles.warningCard}>
             <View style={styles.cardHeader}>
-              <Ionicons name="alert-circle-outline" size={20} color="#92400e" />
-              <Text style={styles.warningTitle}>Warnings</Text>
+              <Ionicons name="bulb-outline" size={20} color="#92400e" />
+              <Text style={styles.warningTitle}>Recommended Additions</Text>
               <View style={[styles.countBadge, styles.warningBadge]}>
-                <Text style={styles.warningBadgeText}>{warnings.length} found</Text>
+                <Text style={styles.warningBadgeText}>{recommendedAdditions.length}</Text>
               </View>
             </View>
-            {warnings.map((warning, index) => (
-              <View key={index} style={styles.bulletItem}>
-                <View style={[styles.bulletDot, styles.warningDot]} />
-                <Text style={styles.bulletText}>{warning}</Text>
-              </View>
-            ))}
+            {recommendedAdditions.map((addition, index) => {
+              // Parse bold clause name: **[Name]**: Description
+              const match = addition.match(/^\*\*(.+?)\*\*:\s*(.+)$/);
+              if (match) {
+                return (
+                  <View key={index} style={styles.clauseItem}>
+                    <View style={[styles.bulletDot, styles.warningDot]} />
+                    <View style={styles.clauseContent}>
+                      <Text style={styles.clauseName}>{match[1]}</Text>
+                      <Text style={styles.clauseDescription}>{match[2]}</Text>
+                    </View>
+                  </View>
+                );
+              }
+              return (
+                <View key={index} style={styles.bulletItem}>
+                  <View style={[styles.bulletDot, styles.warningDot]} />
+                  <Text style={styles.bulletText}>{addition}</Text>
+                </View>
+              );
+            })}
           </View>
         )}
 
         {/* If no structured data, show raw report */}
-        {risks.length === 0 && warnings.length === 0 && !summary && (
+        {criticalClauses.length === 0 && recommendedAdditions.length === 0 && !summary && (
           <View style={styles.summaryCard}>
             <View style={styles.cardHeader}>
               <Ionicons name="document-text-outline" size={20} color="#1a2332" />
@@ -224,6 +268,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     padding: 16,
   },
+  documentTypeCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#d4a574',
+    padding: 12,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  documentTypeText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a2332',
+    // flex: 1, //uncomment to push text to the left
+  },
   summaryCard: {
     backgroundColor: 'white',
     borderRadius: 12,
@@ -252,6 +311,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
+    gap: 8,
+  },
+  cardHeaderTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   cardTitle: {
@@ -319,6 +383,25 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: '#1a2332',
   },
+  clauseItem: {
+    flexDirection: 'row',
+    marginBottom: 12,
+    alignItems: 'flex-start',
+  },
+  clauseContent: {
+    flex: 1,
+  },
+  clauseName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1a2332',
+    marginBottom: 4,
+  },
+  clauseDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#4b5563',
+  },
   reportText: {
     fontSize: 14,
     lineHeight: 22,
@@ -346,6 +429,6 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: '#cccccc',
   },
 });
