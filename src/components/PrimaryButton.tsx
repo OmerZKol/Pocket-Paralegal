@@ -1,3 +1,4 @@
+import FontAwesome5 from '@expo/vector-icons/build/FontAwesome5';
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 
@@ -5,9 +6,10 @@ interface PrimaryButtonProps {
   text?: string;
   onPress: () => void;
   disabled?: boolean;
+  icon?: string; //fontawesome5 icon name
 }
 
-export function PrimaryButton({ onPress, disabled, text }: PrimaryButtonProps) {
+export function PrimaryButton({ onPress, disabled, text, icon }: PrimaryButtonProps) {
   const isDisabled = disabled;
 
   const getButtonText = () => {
@@ -34,6 +36,14 @@ export function PrimaryButton({ onPress, disabled, text }: PrimaryButtonProps) {
             style={styles.spinner}
           />
         )}
+        {icon && !showSpinner && (
+          <FontAwesome5 
+            name={icon} 
+            size={16} 
+            color="white"
+            style={styles.icon}
+          />
+        )}
         <Text style={styles.scanButtonText}>
           {!showSpinner}
           {getButtonText()}
@@ -55,6 +65,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
+  },
+  icon: {
+    marginRight: 10,
   },
   scanButtonDisabled: {
     backgroundColor: '#9ca3af',

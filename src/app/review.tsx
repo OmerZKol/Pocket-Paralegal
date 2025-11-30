@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter, Href } from 'expo-router';
 import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import MlkitOcr from 'react-native-mlkit-ocr';
 import { ReviewScreen } from '../screens/ReviewScreen';
 import { useAppContext } from '../contexts/AppContext';
+import { extractTextFromImage, isPDFFile } from '../utils/pdfProcessor';
+import { PDFProcessorModal, PDFOCRPage } from '../components/PDFProcessorModal';
 
 export default function Review() {
   const router = useRouter();
   const { scannedPages, setScannedPages, setRiskReport } = useAppContext();
+  const [pdfProcessing, setPdfProcessing] = useState<{ visible: boolean; uri: string }>({
+    visible: false,
+    uri: '',
+  });
 
   const handleBack = () => {
     setScannedPages([]);
@@ -82,6 +89,59 @@ export default function Review() {
     }
   };
 
+  const addFileFromDocumentPicker = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*'],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      const file = result.assets[0];
+
+      if (isPDFFile(file.uri, file.mimeType)) {
+        console.log('[FILE] Processing PDF file with OCR');
+        // Start PDF OCR processing
+        setPdfProcessing({ visible: true, uri: file.uri });
+      } else {
+        const fullText = await extractTextFromImage(file.uri);
+
+        const newPage = {
+          uri: file.uri,
+          text: fullText,
+        };
+
+        setScannedPages([...scannedPages, newPage]);
+      }
+    } catch (error) {
+      console.error('File selection error:', error);
+      Alert.alert('Error', 'Failed to process file.');
+    }
+  };
+
+  const handlePDFProcessingComplete = (pages: PDFOCRPage[]) => {
+    console.log(`[PDF OCR] Processing complete. Adding ${pages.length} pages`);
+
+    // Convert PDFOCRPage to ScannedPage format
+    const newPages = pages.map(page => ({
+      uri: page.imageUri, // Use the captured image instead of the PDF URI
+      text: page.text,
+    }));
+
+    // Use functional update to avoid stale closure
+    setScannedPages((currentPages) => [...currentPages, ...newPages]);
+    setPdfProcessing({ visible: false, uri: '' });
+  };
+
+  const handlePDFProcessingError = (error: string) => {
+    console.error('[PDF OCR] Processing error:', error);
+    Alert.alert('PDF Processing Error', error);
+    setPdfProcessing({ visible: false, uri: '' });
+  };
+
   const handleAnalyze = async () => {
     console.log('[ANALYZE] User clicked analyze button');
 
@@ -93,13 +153,25 @@ export default function Review() {
   };
 
   return (
-    <ReviewScreen
-      scannedPages={scannedPages}
-      onBack={handleBack}
-      onRemovePage={handleRemovePage}
-      onAddPage={addPageWithCamera}
-      onAddFromGallery={addPageFromGallery}
-      onAnalyze={handleAnalyze}
-    />
+    <>
+      <ReviewScreen
+        scannedPages={scannedPages}
+        onBack={handleBack}
+        onRemovePage={handleRemovePage}
+        onAddPage={addPageWithCamera}
+        onAddFromGallery={addPageFromGallery}
+        onAddFromFile={addFileFromDocumentPicker}
+        onAnalyze={handleAnalyze}
+      />
+      {pdfProcessing.visible && (
+        <PDFProcessorModal
+          key={pdfProcessing.uri}
+          visible={pdfProcessing.visible}
+          pdfUri={pdfProcessing.uri}
+          onComplete={handlePDFProcessingComplete}
+          onError={handlePDFProcessingError}
+        />
+      )}
+    </>
   );
 }

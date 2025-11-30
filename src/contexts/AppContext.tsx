@@ -10,7 +10,7 @@ interface AppContextType {
   selectedModelId: string;
   setSelectedModelId: (id: string) => void;
   scannedPages: ScannedPage[];
-  setScannedPages: (pages: ScannedPage[]) => void;
+  setScannedPages: React.Dispatch<React.SetStateAction<ScannedPage[]>>;
   riskReport: string;
   setRiskReport: (report: string) => void;
 }
@@ -18,7 +18,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [selectedModelId, setSelectedModelId] = useState('llama-3.2-1b');
+  const [selectedModelId, setSelectedModelId] = useState('llama-3.2-1b-spinquant');
   const [scannedPages, setScannedPages] = useState<ScannedPage[]>([]);
   const [riskReport, setRiskReport] = useState('');
 

@@ -1,5 +1,7 @@
 import React from 'react';
+import { FontAwesome5 } from '@expo/vector-icons';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PrimaryButton } from './PrimaryButton';
 
 interface HomePageProps {
@@ -7,15 +9,16 @@ interface HomePageProps {
 }
 
 export function HomePage({ onGetStarted }: HomePageProps) {
+  const insets = useSafeAreaInsets();
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom }}>
       <View style={styles.heroSection}>
         <View style={styles.iconBadge}>
-          <Text style={styles.heroIcon}>⚖️</Text>
+          <FontAwesome5 name="balance-scale" size={32} color="#1a2332" />
         </View>
         <Text style={styles.heroTitle}>Pocket Paralegal</Text>
         <Text style={styles.heroSubtitle}>
-          AI-powered contract analysis with complete privacy. No data leaves your device.
+          Privacy and security focused AI-powered contract analysis. No data leaves your device.
         </Text>
       </View>
 
@@ -23,37 +26,37 @@ export function HomePage({ onGetStarted }: HomePageProps) {
         <View style={styles.featureGrid}>
           <View style={styles.featureCard}>
             <View style={styles.featureIconContainer}>
-              <Text style={styles.featureIcon}>📸</Text>
+              <FontAwesome5 name="camera" size={24} color="#6b7280" />
             </View>
             <Text style={styles.featureTitle}>Scan Documents</Text>
             <Text style={styles.featureDescription}>
-              Capture contracts via camera or gallery
+              Capture via camera, gallery, or PDFs
             </Text>
           </View>
 
           <View style={styles.featureCard}>
             <View style={styles.featureIconContainer}>
-              <Text style={styles.featureIcon}>🤖</Text>
+              <FontAwesome5 name="robot" size={24} color="#6b7280" />
             </View>
             <Text style={styles.featureTitle}>On-Device AI</Text>
             <Text style={styles.featureDescription}>
-              Powered by Llama 3.2 locally
+              Powered by a fully local AI model
             </Text>
           </View>
 
           <View style={styles.featureCard}>
             <View style={styles.featureIconContainer}>
-              <Text style={styles.featureIcon}>⚠️</Text>
+              <FontAwesome5 name="exclamation-triangle" size={24} color="#6b7280" />
             </View>
             <Text style={styles.featureTitle}>Risk Detection</Text>
             <Text style={styles.featureDescription}>
-              Identify unfavorable terms
+              Identify unfavorable terms and clauses
             </Text>
           </View>
 
           <View style={styles.featureCard}>
             <View style={styles.featureIconContainer}>
-              <Text style={styles.featureIcon}>🔒</Text>
+              <FontAwesome5 name="lock" size={24} color="#6b7280" />
             </View>
             <Text style={styles.featureTitle}>Private & Secure</Text>
             <Text style={styles.featureDescription}>
@@ -77,7 +80,7 @@ export function HomePage({ onGetStarted }: HomePageProps) {
           <View style={styles.stepNumber}>
             <Text style={styles.stepNumberText}>2</Text>
           </View>
-          <Text style={styles.stepText}>Scan or upload contract pages</Text>
+          <Text style={styles.stepText}>Scan with camera, upload images, or select PDF files</Text>
         </View>
 
         <View style={styles.step}>
@@ -114,9 +117,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  contentContainer: {
-    paddingBottom: 40,
-  },
   heroSection: {
     alignItems: 'center',
     backgroundColor: '#1a2332', // Professional navy blue
@@ -152,8 +152,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   featuresSection: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
+    paddingHorizontal: 16,
+    marginBottom: 14,
+    marginTop: 14,
   },
   featureGrid: {
     flexDirection: 'row',
@@ -205,7 +206,8 @@ const styles = StyleSheet.create({
   },
   howItWorksSection: {
     paddingHorizontal: 20,
-    marginBottom: 30,
+    marginBottom: 10,
+    marginTop: 10,
   },
   step: {
     flexDirection: 'row',
@@ -238,14 +240,15 @@ const styles = StyleSheet.create({
   },
   ctaSection: {
     paddingHorizontal: 20,
-    paddingBottom: 32,
-    paddingTop: 24,
+    marginBottom: 2,
+    paddingBottom: 6,
+    paddingTop: 10,
   },
   disclaimer: {
     fontSize: 12,
     color: '#6b7280',
     textAlign: 'center',
-    marginTop: 16,
+    marginTop: 14,
     lineHeight: 18,
     paddingHorizontal: 16,
   },

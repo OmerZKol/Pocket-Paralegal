@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet, Text, View, Alert, TouchableOpacity
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ResourceFetcher } from 'react-native-executorch';
 import { ModelSelector } from '../components/ModelSelector';
@@ -15,7 +15,7 @@ interface ScannerScreenProps {
   selectedModelId: string;
   onSelectModel: (modelId: string) => void;
   onBack?: () => void;
-  onScanComplete: (type: 'camera' | 'gallery') => void;
+  onScanComplete: (type: 'camera' | 'gallery' | 'file') => void;
 }
 
 export function ScannerScreen({
@@ -59,77 +59,94 @@ export function ScannerScreen({
       }
 
       if (selectedModelId !== modelId) {
-        console.log('[MODEL SELECT] User selected model:', modelId);
-        onSelectModel(modelId);
-
         // Check if the new model needs to be downloaded
         const newModel = AVAILABLE_MODELS.find(m => m.id === modelId);
-        if (newModel) {
-          if (isCheckingDownloads) {
-            console.log('[MODEL SELECT] Waiting for download check to complete...');
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-
-          const isDownloaded = isModelDownloaded(newModel.model.modelSource);
-          console.log(`[MODEL SELECT] Download check result for ${newModel.name}: ${isDownloaded}`);
-
-          if (!isDownloaded) {
-            console.log('[MODEL SELECT] Model not downloaded, starting download...');
-
-            Alert.alert(
-              "Download Model?",
-              `${newModel.name} is not downloaded. Would you like to download it now?`,
-              [
-                { text: "Later", style: "cancel" },
-                {
-                  text: "Download",
-                  onPress: async () => {
-                    try {
-                      setIsBackgroundDownloading(true);
-                      setBackgroundDownloadProgress(0);
-                      console.log('[DOWNLOAD] Starting background download...');
-
-                      await ResourceFetcher.fetch(
-                        (progress) => {
-                          console.log(`[DOWNLOAD] Progress: ${(progress * 100).toFixed(1)}%`);
-                          setBackgroundDownloadProgress(progress);
-                        },
-                        newModel.model.modelSource,
-                        newModel.model.tokenizerSource,
-                        newModel.model.tokenizerConfigSource
-                      );
-
-                      console.log('[DOWNLOAD] Download complete!');
-                      setIsBackgroundDownloading(false);
-                      setBackgroundDownloadProgress(0);
-
-                      await refreshDownloadedModels();
-
-                      Alert.alert(
-                        "Download Complete",
-                        `${newModel.name} is ready to use!`,
-                        [{ text: "OK" }]
-                      );
-                    } catch (error) {
-                      console.error('[DOWNLOAD] Download failed:', error);
-                      setIsBackgroundDownloading(false);
-                      setBackgroundDownloadProgress(0);
-                      Alert.alert(
-                        "Download Failed",
-                        "Failed to download the model. Please try again.",
-                        [{ text: "OK" }]
-                      );
-                    }
-                  }
-                }
-              ]
-            );
-          }
+        if (newModel?.warning) {
+          Alert.alert(
+            "Hardware Requirements",
+            "Larger models require modern devices with good hardware (e.g., recent iPhone Pro models or equivalent). Performance may be slow on older devices.",
+            [
+              { text: "Cancel", style: "cancel" },
+              { 
+                text: "Continue", 
+                onPress: () => proceedWithModelSelection(modelId, newModel)
+              }
+            ]
+          );
+          return;
         }
+        await proceedWithModelSelection(modelId, newModel);
       }
     } catch (error) {
       console.error('[MODEL SELECT] CRASH CAUGHT:', error);
       Alert.alert("Error", "An error occurred. Please restart the app.");
+    }
+  };
+
+  const proceedWithModelSelection = async (modelId: string, newModel: typeof AVAILABLE_MODELS[0] | undefined) => {
+    onSelectModel(modelId);
+
+    if (newModel) {
+      if (isCheckingDownloads) {
+        console.log('[MODEL SELECT] Waiting for download check to complete...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      const isDownloaded = isModelDownloaded(newModel.model.modelSource);
+      console.log(`[MODEL SELECT] Download check result for ${newModel.name}: ${isDownloaded}`);
+
+      if (!isDownloaded) {
+        console.log('[MODEL SELECT] Model not downloaded, starting download...');
+
+        Alert.alert(
+          "Download Model?",
+          `${newModel.name} is not downloaded. Would you like to download it now?`,
+          [
+            { text: "Later", style: "cancel" },
+            {
+              text: "Download",
+              onPress: async () => {
+                try {
+                  setIsBackgroundDownloading(true);
+                  setBackgroundDownloadProgress(0);
+                  console.log('[DOWNLOAD] Starting background download...');
+
+                  await ResourceFetcher.fetch(
+                    (progress) => {
+                      console.log(`[DOWNLOAD] Progress: ${(progress * 100).toFixed(1)}%`);
+                      setBackgroundDownloadProgress(progress);
+                    },
+                    newModel.model.modelSource,
+                    newModel.model.tokenizerSource,
+                    newModel.model.tokenizerConfigSource
+                  );
+
+                  console.log('[DOWNLOAD] Download complete!');
+                  setIsBackgroundDownloading(false);
+                  setBackgroundDownloadProgress(0);
+
+                  await refreshDownloadedModels();
+
+                  Alert.alert(
+                    "Download Complete",
+                    `${newModel.name} is ready to use!`,
+                    [{ text: "OK" }]
+                  );
+                } catch (error) {
+                  console.error('[DOWNLOAD] Download failed:', error);
+                  setIsBackgroundDownloading(false);
+                  setBackgroundDownloadProgress(0);
+                  Alert.alert(
+                    "Download Failed",
+                    "Failed to download the model. Please try again.",
+                    [{ text: "OK" }]
+                  );
+                }
+              }
+            }
+          ]
+        );
+      }
     }
   };
 
@@ -148,7 +165,7 @@ export function ScannerScreen({
               </TouchableOpacity>
             )}
             <View style={styles.headerTitles}>
-              <Text style={styles.title}>Pocket Paralegal ⚖️</Text>
+              <Text style={styles.title}>Pocket Paralegal <FontAwesome5 name="balance-scale" size={20} color="#fff" /></Text>
               <Text style={styles.subtitle}>Powered by Arm ExecuTorch</Text>
             </View>
           </View>
@@ -173,11 +190,19 @@ export function ScannerScreen({
                 onPress={() => onScanComplete('camera')}
                 disabled={isBackgroundDownloading}
                 text={'Take Photo'}
+                icon="camera"
               />
               <PrimaryButton
                 onPress={() => onScanComplete('gallery')}
                 disabled={isBackgroundDownloading}
                 text={'Select from Gallery'}
+                icon="image"
+              />
+              <PrimaryButton
+                onPress={() => onScanComplete('file')}
+                disabled={isBackgroundDownloading}
+                text={'Select File (PDF)'}
+                icon="file-pdf"
               />
             </View>
 

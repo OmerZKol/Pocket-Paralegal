@@ -3,7 +3,7 @@ import {
   StyleSheet, Text, View, ScrollView, TouchableOpacity
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PrimaryButton } from '../components/PrimaryButton';
 
 interface ResultsScreenProps {
@@ -18,6 +18,7 @@ export function ResultsScreen({
   onStartOver,
 }: ResultsScreenProps) {
   // Parse the report to separate risks and warnings
+  const insets = useSafeAreaInsets();
   const parseReport = (report: string) => {
     const lines = report.split('\n');
     let summary = '';
@@ -170,7 +171,7 @@ export function ResultsScreen({
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom+4, 14) }]}>
         <PrimaryButton
           onPress={onStartOver}
           disabled={false}
@@ -342,8 +343,8 @@ const styles = StyleSheet.create({
   footer: {
     backgroundColor: '#f5f5f5',
     paddingHorizontal: 20,
-    paddingBottom: 32,
-    paddingTop: 16,
+    paddingBottom: 20,
+    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
   },

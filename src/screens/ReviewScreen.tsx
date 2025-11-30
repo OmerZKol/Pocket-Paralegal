@@ -3,8 +3,9 @@ import {
   StyleSheet, Text, View, ScrollView, Image, TouchableOpacity
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PrimaryButton } from '../components/PrimaryButton';
+import Pdf from 'react-native-pdf';
 
 export interface ScannedPage {
   uri: string;
@@ -17,6 +18,7 @@ interface ReviewScreenProps {
   onRemovePage: (index: number) => void;
   onAddPage: () => void;
   onAddFromGallery: () => void;
+  onAddFromFile: () => void;
   onAnalyze: () => void;
 }
 
@@ -26,8 +28,10 @@ export function ReviewScreen({
   onRemovePage,
   onAddPage,
   onAddFromGallery,
+  onAddFromFile,
   onAnalyze,
 }: ReviewScreenProps) {
+  const insets = useSafeAreaInsets();
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
@@ -49,27 +53,45 @@ export function ReviewScreen({
           </Text>
         </View>
 
-        {scannedPages.map((page, index) => (
-          <View key={index} style={styles.pageCard}>
-            <View style={styles.pageHeader}>
-              <Text style={styles.pageNumber}>Page {index + 1}</Text>
-              <TouchableOpacity
-                onPress={() => onRemovePage(index)}
-                style={styles.removeButton}
-              >
-                <Text style={styles.removeButtonText}>Remove</Text>
-              </TouchableOpacity>
+        {scannedPages.map((page, index) => {
+          const isPDF = page.uri.toLowerCase().endsWith('.pdf');
+
+          return (
+            <View key={index} style={styles.pageCard}>
+              <View style={styles.pageHeader}>
+                <Text style={styles.pageNumber}>
+                  Page {index + 1} {isPDF && '(PDF)'}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => onRemovePage(index)}
+                  style={styles.removeButton}
+                >
+                  <Text style={styles.removeButtonText}>Remove</Text>
+                </TouchableOpacity>
+              </View>
+              {isPDF ? (
+                <View style={styles.pdfContainer}>
+                  <Pdf
+                    source={{ uri: page.uri }}
+                    style={styles.pdfPreview}
+                    page={1}
+                    enablePaging={false}
+                    trustAllCerts={false}
+                  />
+                </View>
+              ) : (
+                <Image
+                  source={{ uri: page.uri }}
+                  style={styles.pageImage}
+                  resizeMode="contain"
+                />
+              )}
+              <Text style={styles.pageTextPreview} numberOfLines={3}>
+                {page.text}
+              </Text>
             </View>
-            <Image
-              source={{ uri: page.uri }}
-              style={styles.pageImage}
-              resizeMode="contain"
-            />
-            <Text style={styles.pageTextPreview} numberOfLines={3}>
-              {page.text}
-            </Text>
-          </View>
-        ))}
+          );
+        })}
 
         <View style={styles.actions}>
           <Text style={styles.addMoreText}>Add more pages:</Text>
@@ -84,19 +106,28 @@ export function ReviewScreen({
               disabled={false}
               text="From Gallery"
             />
+            <PrimaryButton
+              onPress={onAddFromFile}
+              disabled={false}
+              text="Select File (PDF)"
+            />
           </View>
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
-        <PrimaryButton
-          onPress={onAnalyze}
-          disabled={scannedPages.length === 0}
-          text={`Analyze ${scannedPages.length} Page${scannedPages.length !== 1 ? 's' : ''}`}
-        />
-        <TouchableOpacity onPress={onBack} style={styles.cancelButton}>
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </TouchableOpacity>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom+4, 14) }]}>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity onPress={onBack} style={styles.cancelButton}>
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <View style={styles.analyzeButtonContainer}>
+            <PrimaryButton
+              onPress={onAnalyze}
+              disabled={scannedPages.length === 0}
+              text={`Analyze ${scannedPages.length} Page${scannedPages.length !== 1 ? 's' : ''}`}
+            />
+          </View>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -147,8 +178,8 @@ const styles = StyleSheet.create({
   pageCountContainer: {
     backgroundColor: 'white',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    padding: 12,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#e0e0e0',
     alignItems: 'center',
@@ -200,6 +231,19 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: '#f3f4f6',
   },
+  pdfContainer: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: '#f3f4f6',
+    overflow: 'hidden',
+  },
+  pdfPreview: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
   pageTextPreview: {
     fontSize: 12,
     color: '#6b7280',
@@ -222,11 +266,15 @@ const styles = StyleSheet.create({
   footer: {
     backgroundColor: '#f5f5f5',
     paddingHorizontal: 20,
-    paddingBottom: 32,
-    paddingTop: 16,
+    paddingBottom: 20,
+    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
+  },
+  buttonRow: {
+    flexDirection: 'row',
     gap: 12,
+    alignItems: 'center',
   },
   cancelButton: {
     backgroundColor: '#dc2626',
@@ -234,10 +282,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 100,
   },
   cancelButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  analyzeButtonContainer: {
+    flex: 1,
   },
 });
