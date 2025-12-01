@@ -50,12 +50,28 @@ export async function processPDFDocument(fileUri: string): Promise<PDFPage[]> {
 
 /**
  * Extract text from an image file using OCR
+ * Returns both the text and OCR data with bounding boxes
  */
-export async function extractTextFromImage(imageUri: string): Promise<string> {
+export async function extractTextFromImage(imageUri: string): Promise<{ text: string; ocrData: any[] }> {
   try {
     const processed = await MlkitOcr.detectFromUri(imageUri);
     const fullText = processed.map((block) => block.text).join('\n');
-    return fullText;
+
+    // Capture OCR bounding boxes
+    const ocrData = processed.map((block) => ({
+      text: block.text,
+      lines: block.lines.map((line) => ({
+        text: line.text,
+        bounding: {
+          top: line.bounding.top,
+          left: line.bounding.left,
+          width: line.bounding.width,
+          height: line.bounding.height,
+        }
+      }))
+    }));
+
+    return { text: fullText, ocrData };
   } catch (error) {
     console.error('[OCR] Error extracting text from image:', error);
     throw new Error('Failed to extract text from image');

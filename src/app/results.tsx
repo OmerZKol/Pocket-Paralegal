@@ -5,7 +5,7 @@ import { useAppContext } from '../contexts/AppContext';
 
 export default function Results() {
   const router = useRouter();
-  const { riskReport, setScannedPages, setRiskReport } = useAppContext();
+  const { riskReport, citations, scannedPages, setScannedPages, setRiskReport } = useAppContext();
 
   const handleBack = () => {
     setRiskReport('');
@@ -22,6 +22,8 @@ export default function Results() {
   return (
     <ResultsScreen
       riskReport={riskReport}
+      citations={citations}
+      scannedPages={scannedPages}
       onBack={handleBack}
       onStartOver={handleStartOver}
     />

@@ -1,8 +1,37 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-interface ScannedPage {
+export interface OCRLine {
+  text: string;
+  bounding: {
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  };
+}
+
+export interface OCRBlock {
+  text: string;
+  lines: OCRLine[];
+}
+
+export interface Citation {
+  id: string;
+  quote: string;
+  pageIndex: number;
+  highlightRanges: {
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  }[];
+}
+
+export interface ScannedPage {
   uri: string;
   text: string;
+  ocrData?: OCRBlock[];
+  pageNumber?: number;
 }
 
 interface AppContextType {
@@ -13,6 +42,8 @@ interface AppContextType {
   setScannedPages: React.Dispatch<React.SetStateAction<ScannedPage[]>>;
   riskReport: string;
   setRiskReport: (report: string) => void;
+  citations: Citation[];
+  setCitations: (citations: Citation[]) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -21,6 +52,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [selectedModelId, setSelectedModelId] = useState('llama-3.2-1b-spinquant');
   const [scannedPages, setScannedPages] = useState<ScannedPage[]>([]);
   const [riskReport, setRiskReport] = useState('');
+  const [citations, setCitations] = useState<Citation[]>([]);
 
   const value: AppContextType = {
     selectedModelId,
@@ -29,6 +61,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setScannedPages,
     riskReport,
     setRiskReport,
+    citations,
+    setCitations,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

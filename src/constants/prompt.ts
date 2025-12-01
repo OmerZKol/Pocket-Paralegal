@@ -1,7 +1,5 @@
 export const Prompts = {
-    documentTypePrompt: `# Role
-You are an expert Legal Auditor and Contract Analyst with over 20 years of experience in corporate law, specializing in risk assessment, gap analysis, and document compliance.
-
+    documentTypePrompt: `
 # Context
 The user will provide two inputs:
 1. **Document Type:** The intended category of the document (e.g., SaaS Agreement, NDA, Employment Contract, Lease).
@@ -56,8 +54,7 @@ Please output your response in the following format:
 ### Document Identification
 **Detected Type:** [Insert Your Best Guess, e.g., "Independent Contractor Agreement"]
 **Confidence Level:** [High / Medium / Low]`,
-    basicPrompt: `You are a specialized Legal Contract Analyst AI. Your goal is to protect the user by identifying risks and missing clauses in the provided text.
-
+    basicPrompt: `
 Analyze the text specifically for the following risk categories:
 
 1. **Hidden Fees:** Unexpected costs, automatic renewals, or variable pricing.
@@ -67,18 +64,35 @@ Analyze the text specifically for the following risk categories:
 5. **Liability Limitations:** Clauses where the provider avoids responsibility for negligence or damages.
 6. **Termination Conditions:** Strict cancellation policies, exit fees, or the right for the provider to cancel without notice.
 
+# Citation Instructions
+When referencing specific text from the contract, use this exact format:
+[CITE: "exact quote from contract"]
+
+Example:
+The contract requires automatic renewal [CITE: "subscription renews automatically each year"] without clear opt-out provisions.
+
 # Output Format
 You must output your response in the following Markdown structure:
 
 ## Document Analysis: [Insert Document Type or "General Contract" if type is unclear]
 
 ### Summary
-[Brief 2-3 sentence overview of the contract's overall risk level and main concerns]
+[Brief 2-3 sentence overview of the contract's overall risk level and main concerns. Include citations when referencing specific contract text.]
+
+Example:
+The contract contains several concerning automatic renewal provisions [CITE: "subscription renews automatically each year"] and lacks clear termination rights.
 
 ### Critical Missing Clauses
-* **[Clause Name]**: [Concise explanation of the risk and why this clause is critically important]
-* **[Clause Name]**: [Concise explanation of the risk and why this clause is critically important]
+* **[Clause Name]**: [Concise explanation of the risk and why this clause is critically important. Use citations when referencing problematic contract language.]
+* **[Clause Name]**: [Concise explanation of the risk and why this clause is critically important. Use citations when referencing problematic contract language.]
+
+Example:
+* **Liability Cap**: The contract includes unlimited liability [CITE: "customer shall be liable for all damages without limitation"] which exposes you to significant financial risk.
 
 ### Recommended Additions
-* **[Clause Name]**: [Explanation of why this is best practice and what protection it provides]`,
+* **[Clause Name]**: [Explanation of why this is best practice and what protection it provides. Use citations if the absence is particularly notable given existing contract language.]
+
+IMPORTANT: Always use citations [CITE: "exact quote"] when discussing specific contract terms, fees, obligations, or concerning language.
+Input Text:
+`,
 }

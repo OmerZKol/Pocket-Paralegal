@@ -41,9 +41,24 @@ export default function Scanner() {
         const processed = await MlkitOcr.detectFromUri(result.assets[0].uri);
         const fullText = processed.map((block) => block.text).join('\n');
 
+        // Capture OCR bounding boxes
+        const ocrData = processed.map((block) => ({
+          text: block.text,
+          lines: block.lines.map((line) => ({
+            text: line.text,
+            bounding: {
+              top: line.bounding.top,
+              left: line.bounding.left,
+              width: line.bounding.width,
+              height: line.bounding.height,
+            }
+          }))
+        }));
+
         const newPage = {
           uri: result.assets[0].uri,
           text: fullText,
+          ocrData,
         };
 
         setScannedPages([...scannedPages, newPage]);
@@ -73,9 +88,24 @@ export default function Scanner() {
         const processed = await MlkitOcr.detectFromUri(result.assets[0].uri);
         const fullText = processed.map((block) => block.text).join('\n');
 
+        // Capture OCR bounding boxes
+        const ocrData = processed.map((block) => ({
+          text: block.text,
+          lines: block.lines.map((line) => ({
+            text: line.text,
+            bounding: {
+              top: line.bounding.top,
+              left: line.bounding.left,
+              width: line.bounding.width,
+              height: line.bounding.height,
+            }
+          }))
+        }));
+
         const newPage = {
           uri: result.assets[0].uri,
           text: fullText,
+          ocrData,
         };
 
         setScannedPages([...scannedPages, newPage]);
@@ -113,11 +143,12 @@ export default function Scanner() {
       } else {
         // Handle as image file
         console.log('[FILE] Processing image file');
-        const fullText = await extractTextFromImage(file.uri);
+        const { text, ocrData } = await extractTextFromImage(file.uri);
 
         const newPage = {
           uri: file.uri,
-          text: fullText,
+          text,
+          ocrData,
         };
 
         setScannedPages([...scannedPages, newPage]);
@@ -138,6 +169,8 @@ export default function Scanner() {
     const newPages = pages.map(page => ({
       uri: page.imageUri, // Use the captured image instead of the PDF URI
       text: page.text,
+      ocrData: page.ocrData,
+      pageNumber: page.pageNumber,
     }));
 
     // Use functional update to avoid stale closure

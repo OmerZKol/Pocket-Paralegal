@@ -10,12 +10,14 @@ import {
 import Pdf from 'react-native-pdf';
 import { captureRef } from 'react-native-view-shot';
 import MlkitOcr from 'react-native-mlkit-ocr';
+import { OCRBlock } from '../contexts/AppContext';
 
 export interface PDFOCRPage {
   uri: string;
   text: string;
   pageNumber: number;
   imageUri: string;
+  ocrData?: OCRBlock[];
 }
 
 interface PDFProcessorModalProps {
@@ -91,6 +93,20 @@ export function PDFProcessorModal({
       const ocrResult = await MlkitOcr.detectFromUri(imageUri);
       const text = ocrResult.map((block) => block.text).join('\n');
 
+      // Capture OCR bounding boxes
+      const ocrData: OCRBlock[] = ocrResult.map((block) => ({
+        text: block.text,
+        lines: block.lines.map((line) => ({
+          text: line.text,
+          bounding: {
+            top: line.bounding.top,
+            left: line.bounding.left,
+            width: line.bounding.width,
+            height: line.bounding.height,
+          }
+        }))
+      }));
+
       console.log(`[PDF OCR] Extracted ${text.length} characters from page ${currentPage}`);
 
       const page: PDFOCRPage = {
@@ -98,6 +114,7 @@ export function PDFProcessorModal({
         text: text || `[Page ${currentPage} - No text detected]`,
         pageNumber: currentPage,
         imageUri,
+        ocrData,
       };
 
       setProcessedPages(prev => [...prev, page]);

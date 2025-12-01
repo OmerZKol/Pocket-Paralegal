@@ -9,6 +9,7 @@ export interface PDFOCRPage {
   text: string;
   pageNumber: number;
   imageUri: string;
+  ocrData: any[];
 }
 
 interface PDFOCRProcessorProps {
@@ -67,6 +68,20 @@ export function PDFOCRProcessor({
       const ocrResult = await MlkitOcr.detectFromUri(imageUri);
       const text = ocrResult.map((block) => block.text).join('\n');
 
+      // Capture OCR bounding boxes
+      const ocrData = ocrResult.map((block) => ({
+        text: block.text,
+        lines: block.lines.map((line) => ({
+          text: line.text,
+          bounding: {
+            top: line.bounding.top,
+            left: line.bounding.left,
+            width: line.bounding.width,
+            height: line.bounding.height,
+          }
+        }))
+      }));
+
       console.log(`[PDF OCR] Extracted ${text.length} characters from page ${currentPage}`);
 
       const page: PDFOCRPage = {
@@ -74,6 +89,7 @@ export function PDFOCRProcessor({
         text,
         pageNumber: currentPage,
         imageUri,
+        ocrData,
       };
 
       setProcessedPages(prev => [...prev, page]);

@@ -1,23 +1,88 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet, Text, View, ScrollView, TouchableOpacity
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { CitationModal } from '../components/CitationModal';
+import { Citation, ScannedPage } from '../contexts/AppContext';
 
 interface ResultsScreenProps {
   riskReport: string;
+  citations: Citation[];
+  scannedPages: ScannedPage[];
   onBack: () => void;
   onStartOver: () => void;
 }
 
 export function ResultsScreen({
   riskReport,
+  citations,
+  scannedPages,
   onBack,
   onStartOver,
 }: ResultsScreenProps) {
   const insets = useSafeAreaInsets();
+  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
+
+  // Function to render text with clickable citations
+  const renderTextWithCitations = (text: string, textStyle: any) => {
+    // Match citations in format: [CITE: "quote"] or (CITE: "quote")
+    const citationRegex = /[\[\(]CITE:\s*"([^"]+)"\s*[\]\)]/g;
+    const parts: (string | React.ReactElement)[] = [];
+    let lastIndex = 0;
+    let match;
+    let citationIndex = 0;
+
+    while ((match = citationRegex.exec(text)) !== null) {
+      // Add text before citation
+      if (match.index > lastIndex) {
+        parts.push(text.substring(lastIndex, match.index));
+      }
+
+      // Find matching citation object by quote
+      const quote = match[1];
+      const citation = citations.find(c => c.quote === quote);
+
+      // Add clickable citation
+      if (citation) {
+        parts.push(
+          <TouchableOpacity
+            key={`citation-${citationIndex}`}
+            onPress={() => setSelectedCitation(citation)}
+            style={styles.citationButton}
+          >
+            <Text style={styles.citationText}>[Citation: Page {citation.pageIndex + 1}]</Text>
+          </TouchableOpacity>
+        );
+      } else {
+        // Fallback if citation not found
+        parts.push('[Citation]');
+      }
+
+      lastIndex = match.index + match[0].length;
+      citationIndex++;
+    }
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex));
+    }
+
+    // If no citations found, just return the text
+    if (parts.length === 0) {
+      return <Text style={textStyle}>{text}</Text>;
+    }
+
+    return (
+      <Text style={textStyle}>
+        {parts.map((part, index) =>
+          typeof part === 'string' ? part : <React.Fragment key={index}>{part}</React.Fragment>
+        )}
+      </Text>
+    );
+  };
 
   // Parse the new markdown-formatted report
   const parseReport = (report: string) => {
@@ -105,7 +170,7 @@ export function ResultsScreen({
               <Ionicons name="information-circle-outline" size={20} color="#1a2332" />
               <Text style={styles.cardTitle}>Summary</Text>
             </View>
-            <Text style={styles.summaryText}>{summary}</Text>
+            {renderTextWithCitations(summary, styles.summaryText)}
           </View>
         )}
 
@@ -128,7 +193,7 @@ export function ResultsScreen({
                     <View style={styles.bulletDot} />
                     <View style={styles.clauseContent}>
                       <Text style={styles.clauseName}>{match[1]}</Text>
-                      <Text style={styles.clauseDescription}>{match[2]}</Text>
+                      {renderTextWithCitations(match[2], styles.clauseDescription)}
                     </View>
                   </View>
                 );
@@ -136,7 +201,7 @@ export function ResultsScreen({
               return (
                 <View key={index} style={styles.bulletItem}>
                   <View style={styles.bulletDot} />
-                  <Text style={styles.bulletText}>{clause}</Text>
+                  {renderTextWithCitations(clause, styles.bulletText)}
                 </View>
               );
             })}
@@ -162,7 +227,7 @@ export function ResultsScreen({
                     <View style={[styles.bulletDot, styles.warningDot]} />
                     <View style={styles.clauseContent}>
                       <Text style={styles.clauseName}>{match[1]}</Text>
-                      <Text style={styles.clauseDescription}>{match[2]}</Text>
+                      {renderTextWithCitations(match[2], styles.clauseDescription)}
                     </View>
                   </View>
                 );
@@ -170,7 +235,7 @@ export function ResultsScreen({
               return (
                 <View key={index} style={styles.bulletItem}>
                   <View style={[styles.bulletDot, styles.warningDot]} />
-                  <Text style={styles.bulletText}>{addition}</Text>
+                  {renderTextWithCitations(addition, styles.bulletText)}
                 </View>
               );
             })}
@@ -222,6 +287,14 @@ export function ResultsScreen({
           text="Analyze Another Document"
         />
       </View>
+
+      {/* Citation Modal */}
+      <CitationModal
+        visible={selectedCitation !== null}
+        citation={selectedCitation}
+        scannedPages={scannedPages}
+        onClose={() => setSelectedCitation(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -430,5 +503,19 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: '#cccccc',
+  },
+  citationButton: {
+    display: 'inline-flex' as any,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: 'rgba(212, 165, 116, 0.15)',
+    borderWidth: 1,
+    borderColor: '#d4a574',
+  },
+  citationText: {
+    fontSize: 13,
+    color: '#d4a574',
+    fontWeight: '600',
   },
 });

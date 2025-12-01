@@ -6,10 +6,11 @@ import { LLMModule } from 'react-native-executorch';
 import { useAppContext } from '../contexts/AppContext';
 import { AVAILABLE_MODELS } from '../constants/models';
 import { Prompts } from '../constants/prompt';
+import { extractCitations } from '../utils/citationParser';
 
 export default function Analyzing() {
   const router = useRouter();
-  const { selectedModelId, scannedPages, setRiskReport } = useAppContext();
+  const { selectedModelId, scannedPages, setRiskReport, setCitations } = useAppContext();
   const [isModelReady, setIsModelReady] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -33,8 +34,11 @@ export default function Analyzing() {
       try {
         console.log('[MODEL] Initializing LLM...');
 
-        // Get combined text
-        const combinedText = scannedPages.map((page) => page.text).join('\n\n--- Page Break ---\n\n');
+        // Get combined text with page numbers
+        const combinedText = scannedPages.map((page, index) => {
+          const pageNum = page.pageNumber || (index + 1);
+          return `--- Page ${pageNum} ---\n${page.text}`;
+        }).join('\n\n');
         combinedTextRef.current = combinedText;
         console.log('[ANALYSIS] Text prepared, length:', combinedText.length);
 
@@ -76,10 +80,11 @@ export default function Analyzing() {
 
           // System prompt - Defines the AI's role and behavior
           // const systemPrompt = `You are an expert lawyer specialized in contract analysis. Your role is to review contracts and identify potential risks, hidden clauses, and problematic terms that could negatively impact the signing party.`;
+          const systemPrompt = `You are an expoer lawyer specialized in contract analysis. Your goal is to protect the user by identifying risks and missing clauses in the provided text.`;
 
           // User prompt with the actual contract text
-          const systemPrompt = Prompts.basicPrompt;
-          const userPrompt = text;
+          // const systemPrompt = Prompts.basicPrompt;
+          const userPrompt = Prompts.basicPrompt + text;
 
           const messages = [
             { role: 'system' as const, content: systemPrompt },
@@ -130,10 +135,15 @@ export default function Analyzing() {
   // Monitor analysis completion and navigate to results
   useEffect(() => {
     if (localReport && !isGenerating && isModelReady) {
-      console.log('[ANALYSIS] Complete, navigating to results');
+      console.log('[ANALYSIS] Complete, extracting citations');
 
-      // Save the report to context
+      // Extract citations from the report
+      const extractedCitations = extractCitations(localReport, scannedPages);
+      console.log(`[CITATIONS] Found ${extractedCitations.length} citations`);
+
+      // Save the report and citations to context
       setRiskReport(localReport);
+      setCitations(extractedCitations);
 
       // Delete model from memory before navigation
       // const llm = llmRef.current;
@@ -154,7 +164,7 @@ export default function Analyzing() {
         router.replace('/results' as Href);
       }, 200);
     }
-  }, [localReport, isGenerating, isModelReady, router, setRiskReport]);
+  }, [localReport, isGenerating, isModelReady, router, setRiskReport, setCitations, scannedPages]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>

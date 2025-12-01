@@ -127,7 +127,7 @@ export function ReviewScreen({
             <PrimaryButton
               onPress={onAnalyze}
               disabled={scannedPages.length === 0}
-              text={`Analyze ${scannedPages.length} Page${scannedPages.length !== 1 ? 's' : ''}`}
+              text={`Analyse ${scannedPages.length} Page${scannedPages.length !== 1 ? 's' : ''}`}
             />
           </View>
         </View>
