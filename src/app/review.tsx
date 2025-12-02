@@ -176,7 +176,6 @@ export default function Review() {
   };
 
   const handleAnalyze = async () => {
-    console.log('[ANALYZE] User clicked analyze button');
 
     // Clear previous analysis results
     setRiskReport('');

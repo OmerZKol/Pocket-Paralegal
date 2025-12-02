@@ -51,7 +51,6 @@ export default function Analyzing() {
             }
           },
         });
-        console.log('[MODEL] LLMModule instance created');
 
         llmRef.current = llm;
 
@@ -75,12 +74,11 @@ export default function Analyzing() {
           setIsGenerating(true);
 
           const text = combinedTextRef.current;
-          console.log('[ANALYSIS] Starting analysis...');
           console.log(`[ANALYSIS] Analyzing combined text, length: ${text.length}`);
 
           // System prompt - Defines the AI's role and behavior
           // const systemPrompt = `You are an expert lawyer specialized in contract analysis. Your role is to review contracts and identify potential risks, hidden clauses, and problematic terms that could negatively impact the signing party.`;
-          const systemPrompt = `You are an expoer lawyer specialized in contract analysis. Your goal is to protect the user by identifying risks and missing clauses in the provided text.`;
+          const systemPrompt = `You are an expert lawyer specialized in contract analysis. Your goal is to protect the user by identifying risks and missing clauses in the provided text.`;
 
           // User prompt with the actual contract text
           // const systemPrompt = Prompts.basicPrompt;
@@ -97,7 +95,6 @@ export default function Analyzing() {
             console.log('[ANALYSIS] Generation complete');
 
             if (isMounted) {
-              console.log('[ANALYSIS] Complete');
               setIsGenerating(false);
             }
           } catch (error) {
@@ -118,25 +115,12 @@ export default function Analyzing() {
     // Cleanup function
     return () => {
       isMounted = false;
-      // if (llmRef.current) {
-      //   console.log('[MODEL] Cleaning up LLM instance...');
-      //   try {
-      //     llmRef.current.interrupt();
-      //     llmRef.current.delete();
-      //     console.log('[MODEL] Model deleted from memory');
-      //   } catch (error) {
-      //     console.error('[MODEL] Error cleaning up:', error);
-      //   }
-      //   llmRef.current = null;
-      // }
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Monitor analysis completion and navigate to results
   useEffect(() => {
     if (localReport && !isGenerating && isModelReady) {
-      console.log('[ANALYSIS] Complete, extracting citations');
-
       // Extract citations from the report
       const extractedCitations = extractCitations(localReport, scannedPages);
       console.log(`[CITATIONS] Found ${extractedCitations.length} citations`);
@@ -144,20 +128,6 @@ export default function Analyzing() {
       // Save the report and citations to context
       setRiskReport(localReport);
       setCitations(extractedCitations);
-
-      // Delete model from memory before navigation
-      // const llm = llmRef.current;
-      // if (llm) {
-      //   console.log('[MODEL] Deleting model from memory before navigation...');
-      //   try {
-      //     llm.interrupt();
-      //     llm.delete();
-      //     console.log('[MODEL] Model successfully deleted');
-      //   } catch (error) {
-      //     console.error('[MODEL] Error deleting model:', error);
-      //   }
-      //   llmRef.current = null;
-      // }
 
       // Add a small delay to ensure deletion completes before navigation
       setTimeout(() => {
