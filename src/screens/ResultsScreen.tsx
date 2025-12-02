@@ -48,17 +48,14 @@ export function ResultsScreen({
       // Add clickable citation
       if (citation) {
         parts.push(
-          <TouchableOpacity
+          <Text
             key={`citation-${citationIndex}`}
             onPress={() => setSelectedCitation(citation)}
-            style={styles.citationButton}
+            style={styles.citationText}
           >
-            <Text style={styles.citationText}>[Citation: Page {citation.pageIndex + 1}]</Text>
-          </TouchableOpacity>
+            [Page {citation.pageIndex + 1}]
+          </Text>
         );
-      } else {
-        // Fallback if citation not found
-        parts.push('[Citation]');
       }
 
       lastIndex = match.index + match[0].length;
@@ -284,7 +281,7 @@ export function ResultsScreen({
         <PrimaryButton
           onPress={onStartOver}
           disabled={false}
-          text="Analyze Another Document"
+          text="Analyse Another Document"
         />
       </View>
 
@@ -487,7 +484,9 @@ const styles = StyleSheet.create({
   disclaimerCard: {
     backgroundColor: '#f3f4f6',
     borderRadius: 12,
-    padding: 16,
+    paddingBottom: 10,
+    paddingHorizontal: 10,
+    paddingTop: 2,
     marginBottom: 16,
   },
   disclaimerText: {
@@ -504,18 +503,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#cccccc',
   },
-  citationButton: {
-    display: 'inline-flex' as any,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    backgroundColor: 'rgba(212, 165, 116, 0.15)',
-    borderWidth: 1,
-    borderColor: '#d4a574',
-  },
   citationText: {
     fontSize: 13,
+    lineHeight: 20,
     color: '#d4a574',
     fontWeight: '600',
+    backgroundColor: 'rgba(212, 165, 116, 0.15)',
   },
 });

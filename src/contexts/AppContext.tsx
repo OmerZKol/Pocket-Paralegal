@@ -32,6 +32,8 @@ export interface ScannedPage {
   text: string;
   ocrData?: OCRBlock[];
   pageNumber?: number;
+  originalWidth?: number;
+  originalHeight?: number;
 }
 
 interface AppContextType {

@@ -10,6 +10,8 @@ export interface PDFOCRPage {
   pageNumber: number;
   imageUri: string;
   ocrData: any[];
+  originalWidth: number;
+  originalHeight: number;
 }
 
 interface PDFOCRProcessorProps {
@@ -56,13 +58,15 @@ export function PDFOCRProcessor({
       // Wait a bit for the PDF page to render
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Capture the rendered PDF page as an image
+      // Capture the rendered PDF page as an image with explicit dimensions
       const imageUri = await captureRef(viewRef, {
         format: 'png',
         quality: 1,
+        width: 800,
+        height: 1000,
       });
 
-      console.log(`[PDF OCR] Captured page ${currentPage} as image:`, imageUri);
+      console.log(`[PDF OCR] Captured page ${currentPage} as 800x1000 image:`, imageUri);
 
       // Run OCR on the captured image
       const ocrResult = await MlkitOcr.detectFromUri(imageUri);
@@ -90,6 +94,8 @@ export function PDFOCRProcessor({
         pageNumber: currentPage,
         imageUri,
         ocrData,
+        originalWidth: 800,
+        originalHeight: 1000,
       };
 
       setProcessedPages(prev => [...prev, page]);

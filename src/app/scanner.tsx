@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter, Href } from 'expo-router';
-import { Alert } from 'react-native';
+import { Alert, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import MlkitOcr from 'react-native-mlkit-ocr';
@@ -20,7 +20,7 @@ export default function Scanner() {
   const handleBack = () => {
     setScannedPages([]);
     setRiskReport('');
-    router.back();
+    router.push('/' as Href);
   };
 
   const scanWithCamera = async () => {
@@ -41,6 +41,9 @@ export default function Scanner() {
         const processed = await MlkitOcr.detectFromUri(result.assets[0].uri);
         const fullText = processed.map((block) => block.text).join('\n');
 
+        // Log the actual image dimensions from the asset
+        console.log('[SCAN] Camera image dimensions from asset:', result.assets[0].width, 'x', result.assets[0].height);
+
         // Capture OCR bounding boxes
         const ocrData = processed.map((block) => ({
           text: block.text,
@@ -55,10 +58,17 @@ export default function Scanner() {
           }))
         }));
 
+        // Log sample OCR coordinates
+        if (processed.length > 0 && processed[0].lines.length > 0) {
+          console.log('[SCAN] Sample OCR coordinate:', processed[0].lines[0].bounding);
+        }
+
         const newPage = {
           uri: result.assets[0].uri,
           text: fullText,
           ocrData,
+          originalWidth: result.assets[0].width,
+          originalHeight: result.assets[0].height,
         };
 
         setScannedPages([...scannedPages, newPage]);
@@ -88,6 +98,9 @@ export default function Scanner() {
         const processed = await MlkitOcr.detectFromUri(result.assets[0].uri);
         const fullText = processed.map((block) => block.text).join('\n');
 
+        // Log the actual image dimensions from the asset
+        console.log('[SCAN] Gallery image dimensions from asset:', result.assets[0].width, 'x', result.assets[0].height);
+
         // Capture OCR bounding boxes
         const ocrData = processed.map((block) => ({
           text: block.text,
@@ -102,10 +115,17 @@ export default function Scanner() {
           }))
         }));
 
+        // Log sample OCR coordinates
+        if (processed.length > 0 && processed[0].lines.length > 0) {
+          console.log('[SCAN] Sample OCR coordinate:', processed[0].lines[0].bounding);
+        }
+
         const newPage = {
           uri: result.assets[0].uri,
           text: fullText,
           ocrData,
+          originalWidth: result.assets[0].width,
+          originalHeight: result.assets[0].height,
         };
 
         setScannedPages([...scannedPages, newPage]);
@@ -145,14 +165,28 @@ export default function Scanner() {
         console.log('[FILE] Processing image file');
         const { text, ocrData } = await extractTextFromImage(file.uri);
 
+        // Get image dimensions
+        const { width, height } = await new Promise<{ width: number; height: number }>((resolve) => {
+          Image.getSize(
+            file.uri,
+            (width, height) => resolve({ width, height }),
+            (error) => {
+              console.warn('[FILE] Could not get image dimensions:', error);
+              resolve({ width: 0, height: 0 });
+            }
+          );
+        });
+
         const newPage = {
           uri: file.uri,
           text,
           ocrData,
+          originalWidth: width,
+          originalHeight: height,
         };
 
         setScannedPages([...scannedPages, newPage]);
-        console.log('[FILE] Image file processed successfully');
+        console.log('[FILE] Image file processed successfully with dimensions:', width, 'x', height);
         return false; // Regular image, not a PDF
       }
     } catch (error) {
@@ -171,6 +205,8 @@ export default function Scanner() {
       text: page.text,
       ocrData: page.ocrData,
       pageNumber: page.pageNumber,
+      originalWidth: page.originalWidth,
+      originalHeight: page.originalHeight,
     }));
 
     // Use functional update to avoid stale closure

@@ -86,6 +86,7 @@ export function findQuoteBoundingBoxes(
           width: allLines[j].bounding.width,
           height: allLines[j].bounding.height,
         });
+        console.log(`[CITATION] Found bounding box for line ${j}:`, allLines[j].bounding);
       }
       break;
     }

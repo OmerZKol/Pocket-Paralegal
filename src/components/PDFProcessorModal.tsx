@@ -18,6 +18,8 @@ export interface PDFOCRPage {
   pageNumber: number;
   imageUri: string;
   ocrData?: OCRBlock[];
+  originalWidth: number;
+  originalHeight: number;
 }
 
 interface PDFProcessorModalProps {
@@ -115,6 +117,8 @@ export function PDFProcessorModal({
         pageNumber: currentPage,
         imageUri,
         ocrData,
+        originalWidth: 800,
+        originalHeight: 1000,
       };
 
       setProcessedPages(prev => [...prev, page]);

@@ -173,8 +173,7 @@ export default function Analyzing() {
         {!isModelReady ? (
           <>
             <Text style={styles.analyzingText}>
-              Loading AI Model...{'\n'}
-              Preparing Llama 3.2...
+              Loading AI Model...
             </Text>
             {downloadProgress > 0 && (
               <View style={styles.progressContainer}>
@@ -187,8 +186,8 @@ export default function Analyzing() {
           </>
         ) : (
           <Text style={styles.analyzingText}>
-            Analyzing Contract...{'\n'}
-            Running Llama 3.2 locally...
+            Analysing Contract...{'\n'}
+            Running AI model locally...
           </Text>
         )}
       </View>
