@@ -41,9 +41,15 @@ app-example
 # generated native folders
 /ios
 /android
+
+# IDE
 .vscode/
+.idea/
+
+# Build outputs
 *.apk
+*.aab
+*.ipa
+
+# OS files
 .DS_Store
-CRASH_ANALYSIS.md
-MEMORY_MANAGEMENT.md
-pocket-paralegal-app/

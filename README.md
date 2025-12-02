@@ -1,56 +1,41 @@
-# Pocket Paralegal ⚖️
+# Pocket Paralegal
 **Protecting users from predatory contracts using privacy-first, on-device AI.**
 
-> **Submission for the Arm AI Developer Challenge 2025**
-> * **Team:** Omer
-> * **Device Target:** Android/iOS (Arm64)
-> * **Model:** Llama 3.2 (Quantized via ExecuTorch)
+> Built for the Arm AI Developer Challenge 2025
 
----
-
-## 1. Project Overview
-**Pocket Paralegal** is an offline mobile application that empowers everyday users to understand complex legal documents instantly. Users can scan any contract, rental agreement, or Terms of Service using their phone camera, and the app identifies "red flags" (predatory clauses, hidden fees, data privacy risks) in simple, plain English.
+## Project Overview
+**Pocket Paralegal** is a mobile application that allows everyday users to understand legal documents instantly. Users can upload any contract, rental agreement, or Terms of Service, and the app identifies "red flags" (predatory clauses, hidden fees, data privacy risks) in simple, plain English. No legal expertise required.
 
 ### What makes this project unique?:
-* **Privacy First:** Legal documents are sensitive. Unlike cloud-based AI, Pocket Paralegal processes everything **100% locally** on the device. No data ever leaves the user's phone[cite: 41].
-* **Optimized for Arm:** We utilize the efficiency of Arm architecture to run a Large Language Model (LLM) on a mobile processor without draining the battery or requiring an internet connection.
+* **Everything runs locally on your phone.** Your sensitive documents never touch the internet, all data stays on your local device. No data ever leaves your phone.
+* **Optimised for Arm:** This project utilises the efficiency of Arm architecture to run a Large Language Model (LLM) on a mobile processor without excessively draining the battery or requiring an internet connection.
 
----
+## Functionality & Key Features
 
-## 2. Functionality & Key Features
-This project demonstrates a complete "Vision-to-Insight" pipeline running entirely on the edge.
+1. **Instant OCR:** Uses on-device Optical Character Recognition to convert physical paper documents into digital text in milliseconds.
+2. **Local Intelligence:** Powered by **Llama 3.2 (1B/3B)** running through **ExecuTorch**.
+3. **Context Injection:** Leverages the massive context window of modern SLMs (Small Language Models) to analyse up to 10 pages of text instantly without the need for complex fine-tuning.
+4. **Document Analysis:** Get a report of the document, including a summary, warnings for undesirable clauses, and suggestions for clarifications.
 
-* **Instant OCR:** Uses on-device Optical Character Recognition to convert physical paper documents into digital text in milliseconds.
-* **Local Intelligence:** Powered by **Llama 3.2 (1B/3B)** running via **ExecuTorch**.
-* **Context Injection:** Leverages the massive context window of modern SLMs (Small Language Models) to analyze up to 10 pages of text instantly without the need for complex fine-tuning.
-* **Risk Highlighting:** Parses legal jargon and outputs a structured "Risk Report" identifying the top 3 dangers in the document.
+### How it works
 
----
+1. **Capture image or upload file** any contract or agreement.
+2. **Wait a few seconds** while the AI processes document locally.
+3. **Get a simple breakdown** get a summary of the document, along with warnings for anything wrong with the contract, and any clarifications that is required.
 
-## 3. Technological Implementation
-*Judging Criteria: Does the project thoroughly leverage Arm architecture?*
+No accounts, uploads, or cloud required.
 
-We built this project to showcase the power of the **Arm v9 architecture** and its NPU/CPU capabilities.
+## Why I built it this way
 
-### The Stack:
-* **Framework:** React Native (Expo Development Build)
-* **Inference Engine:** Meta **ExecuTorch** (PyTorch Edge)
-* **Backend:** **XNNPACK Delegate** (Highly optimized for Arm NEON/SVE instructions)
-* **Model:** Llama 3.2 1B Instruct (Quantized to 4-bit for mobile efficiency)
-* **Vision:** Google ML Kit (On-device Text Recognition v2)
+Legal documents are personal. I didn't want to build something that ships your rental agreement or employment contract to some server. So everything including the text recognition, the AI analysis, all of it happens on your device.
 
-### Optimization Strategy:
-To ensure smooth performance on mobile:
-1. **Quantization:** We compressed the model weights to 4-bit integer precision, reducing memory usage significantly while maintaining reasoning accuracy.
-2. **Thread Management:** Inference runs on background threads to keep the UI (60fps) smooth during analysis.
+This only works because modern phones are very powerful. The app runs a real language model (Llama 3.2) directly on the phone's processor using Meta's ExecuTorch framework.
 
----
-
-## 4. Setup Instructions
-*Judging Criteria: Step-by-step instructions on how to build and run the project.*
+## Setup Instructions
 
 **Prerequisites:**
 * Node.js & npm
+* Expo CLI (`npm install -g expo-cli`)
 * Android Studio (for Android Emulator/Device) or Xcode (for iOS)
 * A physical Arm-based mobile device is recommended for performance testing.
 
@@ -58,6 +43,8 @@ To ensure smooth performance on mobile:
 
 1.  **Clone the repository:**
     ```bash
+    git clone https://github.com/OmerZKol/Pocket-Paralegal
+    cd PocketParalegal
     ```
 
 2.  **Install dependencies:**
@@ -65,7 +52,7 @@ To ensure smooth performance on mobile:
     npm install
     ```
 
-3.  **Prepare the Prebuild (Required for ExecuTorch C++ bindings):**
+3.  **Prepare the Prebuild (Required for ExecuTorch):**
     ```bash
     npx expo prebuild
     ```
@@ -78,34 +65,18 @@ To ensure smooth performance on mobile:
     npx expo run:ios
     ```
 
-*Note: The first launch may take a few minutes to compile the native ExecuTorch binaries.*
+5. **First Launch:**
+* On first launch, the app will prompt you to download an AI model (~50-500MB depending on the model)
+* Ensure you have a stable internet connection for the initial model download
+* Models are cached on device after the first download, so subsequent launches will not require internet access.
 
----
-
-## 5. User Experience (UX)
-*Judging Criteria: Is the design well thought out? Can a user understand what to do?*
-
-We designed for **Simplicity and Speed**:
-1.  **One-Tap Workflow:** The user opens the app and sees one big button: "Scan Contract."
-2.  **Visual Feedback:** While the AI "thinks," we provide clear status updates so the user is never left wondering.
-3.  **Actionable Results:** We don't just dump text; we provide a structured list of risks with clear "Why this matters" explanations.
-
----
-
-## 6. Potential Impact
-*Judging Criteria: Is the source code useful for other projects to build upon?*
-
-This repository serves as a **template** for any developer wanting to build "Vision + LLM" apps on mobile. By open-sourcing this implementation, we provide:
-* A working example of integrating **ExecuTorch with React Native**.
-* A pattern for **Context Injection** on mobile devices.
-* A blueprint for privacy-sensitive AI applications in healthcare, finance, or law.
-
----
-
-## 7. The "WOW" Factor
-*Judging Criteria: Does the application surprise the user with its capabilities?*
-
-* **It works in Airplane Mode!** The biggest "magic trick" of Pocket Paralegal is turning off Wi-Fi and data, scanning a complex legal document, and watching the AI dissect it in seconds. It proves that **high-level intelligence no longer requires the cloud**.
+**Extra**
+1. If you want, you can compile the project into an apk/ipa for distribution or use. Use the following commands for a *locally built production version*:
+    ```bash
+    eas build --platform android --profile production --local
+    # OR
+    eas build --platform ios --profile production --local
+    ```
 
 ---
 
