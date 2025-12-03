@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useRef } from 'react';
+import { LLMModule } from 'react-native-executorch';
 
 export interface OCRLine {
   text: string;
@@ -46,6 +47,10 @@ interface AppContextType {
   setRiskReport: (report: string) => void;
   citations: Citation[];
   setCitations: (citations: Citation[]) => void;
+  // Model loading state
+  loadedModelId: string | null;
+  setLoadedModelId: (id: string | null) => void;
+  llmInstance: React.MutableRefObject<LLMModule | null>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -55,6 +60,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [scannedPages, setScannedPages] = useState<ScannedPage[]>([]);
   const [riskReport, setRiskReport] = useState('');
   const [citations, setCitations] = useState<Citation[]>([]);
+  const [loadedModelId, setLoadedModelId] = useState<string | null>(null);
+  const llmInstance = useRef<LLMModule | null>(null);
 
   const value: AppContextType = {
     selectedModelId,
@@ -65,6 +72,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setRiskReport,
     citations,
     setCitations,
+    loadedModelId,
+    setLoadedModelId,
+    llmInstance,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

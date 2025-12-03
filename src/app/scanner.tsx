@@ -11,7 +11,7 @@ import { PDFProcessorModal, PDFOCRPage } from '../components/PDFProcessorModal';
 
 export default function Scanner() {
   const router = useRouter();
-  const { selectedModelId, setSelectedModelId, scannedPages, setScannedPages, setRiskReport } = useAppContext();
+  const { selectedModelId, setSelectedModelId, scannedPages, setScannedPages, setRiskReport, loadedModelId } = useAppContext();
   const [pdfProcessing, setPdfProcessing] = useState<{ visible: boolean; uri: string }>({
     visible: false,
     uri: '',
@@ -255,6 +255,7 @@ export default function Scanner() {
         onSelectModel={setSelectedModelId}
         onBack={handleBack}
         onScanComplete={handleScanComplete}
+        loadedModelId={loadedModelId}
       />
       {pdfProcessing.visible && (
         <PDFProcessorModal

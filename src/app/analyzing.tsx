@@ -10,7 +10,7 @@ import { extractCitations } from '../utils/citationParser';
 
 export default function Analyzing() {
   const router = useRouter();
-  const { selectedModelId, scannedPages, setRiskReport, setCitations } = useAppContext();
+  const { selectedModelId, scannedPages, setRiskReport, setCitations, loadedModelId, setLoadedModelId, llmInstance } = useAppContext();
   const [isModelReady, setIsModelReady] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -18,9 +18,6 @@ export default function Analyzing() {
 
   // Get the selected model configuration
   const selectedModel = AVAILABLE_MODELS.find(m => m.id === selectedModelId) || AVAILABLE_MODELS[0];
-
-  // Store the LLM instance
-  const llmRef = useRef<LLMModule | null>(null);
 
   // Store the combined text once
   const combinedTextRef = useRef<string | null>(null);
@@ -42,31 +39,46 @@ export default function Analyzing() {
         combinedTextRef.current = combinedText;
         console.log('[ANALYSIS] Text prepared, length:', combinedText.length);
 
-        // Create LLM instance with token callback
-        console.log('[MODEL] Creating new LLMModule instance...');
-        const llm = new LLMModule({
-          tokenCallback: (token: string) => {
-            if (isMounted) {
-              setLocalReport((prev) => prev + token);
+        // Check if model is already loaded
+        if (loadedModelId === selectedModelId && llmInstance.current) {
+          console.log('[MODEL] Model already loaded, reusing instance');
+          // Update the token callback for the current analysis
+          llmInstance.current.setTokenCallback({
+            tokenCallback: (token: string) => {
+              if (isMounted) {
+                setLocalReport((prev) => prev + token);
+              }
             }
-          },
-        });
+          });
+          setIsModelReady(true);
+        } else {
+          // Create LLM instance with token callback
+          console.log('[MODEL] Creating new LLMModule instance...');
+          const llm = new LLMModule({
+            tokenCallback: (token: string) => {
+              if (isMounted) {
+                setLocalReport((prev) => prev + token);
+              }
+            },
+          });
 
-        llmRef.current = llm;
+          llmInstance.current = llm;
 
-        // Load the model
-        console.log('[MODEL] Loading model...');
-        await llm.load(selectedModel.model, (progress: number) => {
-          if (isMounted) {
-            console.log('[MODEL] Download progress:', progress);
-            setDownloadProgress(progress);
-          }
-        });
+          // Load the model
+          console.log('[MODEL] Loading model...');
+          await llm.load(selectedModel.model, (progress: number) => {
+            if (isMounted) {
+              console.log('[MODEL] Download progress:', progress);
+              setDownloadProgress(progress);
+            }
+          });
 
-        if (!isMounted) return;
+          if (!isMounted) return;
 
-        console.log('[MODEL] Model loaded successfully');
-        setIsModelReady(true);
+          console.log('[MODEL] Model loaded successfully');
+          setLoadedModelId(selectedModelId);
+          setIsModelReady(true);
+        }
 
         // Start analysis
         if (!hasStartedAnalysisRef.current && combinedTextRef.current) {
@@ -91,8 +103,10 @@ export default function Analyzing() {
 
           try {
             console.log('[ANALYSIS] Generating analysis with LLM...');
-            await llm.generate(messages);
-            console.log('[ANALYSIS] Generation complete');
+            if (llmInstance.current) {
+              await llmInstance.current.generate(messages);
+              console.log('[ANALYSIS] Generation complete');
+            }
 
             if (isMounted) {
               setIsGenerating(false);
@@ -112,9 +126,10 @@ export default function Analyzing() {
 
     initializeLLM();
 
-    // Cleanup function
+    // Cleanup function - Do NOT delete the model anymore
     return () => {
       isMounted = false;
+      // Model stays loaded in context for reuse
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

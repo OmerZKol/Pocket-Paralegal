@@ -1,6 +1,8 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Modal, ScrollView } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Modal, ScrollView, Alert } from 'react-native';
 import { AVAILABLE_MODELS } from '../constants/models';
+import { reloadAppAsync } from 'expo';
+import { FontAwesome5 } from '@expo/vector-icons';
 
 interface Model {
   id: string;
@@ -19,10 +21,69 @@ interface ModelSelectorProps {
   disabled?: boolean;
   loadingMessage?: string;
   isModelDownloaded: (modelUrl: string) => boolean;
+  loadedModelId?: string | null;
 }
 
-export function ModelSelector({ selectedModel, onSelectModel, disabled = false, loadingMessage, isModelDownloaded }: ModelSelectorProps) {
+export function ModelSelector({ selectedModel, onSelectModel, disabled = false, loadingMessage, isModelDownloaded, loadedModelId }: ModelSelectorProps) {
   const [showPicker, setShowPicker] = React.useState(false);
+
+  const handleModelChange = async (modelId: string) => {
+    const newModel = AVAILABLE_MODELS.find(m => m.id === modelId);
+
+    // Check if a model is already loaded and if user is trying to change it
+    if (loadedModelId && loadedModelId !== modelId) {
+      Alert.alert(
+        'Restart Required',
+        'Changing the AI model requires an app restart. Do you want to continue?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+            onPress: () => setShowPicker(false)
+          },
+          {
+            text: 'Restart App',
+            style: 'destructive',
+            onPress: async () => {
+              onSelectModel(modelId);
+              setShowPicker(false);
+              // Restart the app
+              try {
+                await reloadAppAsync();
+              } catch (error) {
+                console.error('[MODEL] Error restarting app:', error);
+                Alert.alert('Restart Failed', 'Please manually restart the app to change models.');
+              }
+            }
+          }
+        ]
+      );
+    } else if (newModel?.warning && selectedModel.id !== modelId) {
+      // Show hardware warning for larger models
+      Alert.alert(
+        'Hardware Requirements',
+        'Larger models require modern devices with good hardware (e.g., recent iPhone Pro models or equivalent). Performance may be slow on older devices.',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+            onPress: () => setShowPicker(false)
+          },
+          {
+            text: 'Continue',
+            onPress: () => {
+              onSelectModel(modelId);
+              setShowPicker(false);
+            }
+          }
+        ]
+      );
+    } else {
+      // No model loaded yet, or selecting the same model, or no warning needed
+      onSelectModel(modelId);
+      setShowPicker(false);
+    }
+  };
 
   const handlePress = () => {
     if (!disabled) {
@@ -68,20 +129,43 @@ export function ModelSelector({ selectedModel, onSelectModel, disabled = false, 
                       styles.modelOption,
                       isSelected && styles.modelOptionSelected
                     ]}
-                    onPress={() => {
-                      onSelectModel(model.id);
-                      setShowPicker(false);
-                    }}
+                    onPress={() => handleModelChange(model.id)}
                   >
                     <View style={styles.modelOptionContent}>
                       <View style={styles.modelOptionTextContainer}>
                         <Text style={styles.modelOptionName}>{model.name}</Text>
-                        <Text style={styles.modelOptionDescription}>{model.description}</Text>
+                        <View style={styles.modelDescriptionRow}>
+                          <Text style={styles.modelOptionDescription}>{model.description}</Text>
+                          {model.hardwareRequirement == 'high' && (
+                            <FontAwesome5
+                              name="microchip"
+                              size={14}
+                              color="#e74c3c"
+                              style={styles.hardwareIcon}
+                            />
+                          )}
+                          {model.hardwareRequirement == 'medium' && (
+                            <FontAwesome5
+                              name="microchip"
+                              size={14}
+                              color="#f39c12"
+                              style={styles.hardwareIcon}
+                            />
+                          )}
+                          {model.hardwareRequirement == 'low' && (
+                            <FontAwesome5
+                              name="microchip"
+                              size={14}
+                              color="#27ae60"
+                              style={styles.hardwareIcon}
+                            />
+                          )}
+                        </View>
                       </View>
                       {isDownloaded ? (
-                        <Text style={styles.modelReadyIcon}>✓</Text>
+                        <FontAwesome5 name="check-circle" size={18} color="#27ae60" style={styles.modelReadyIcon} />
                       ) : (
-                        <Text style={styles.modelDownloadIcon}>⬇</Text>
+                        <FontAwesome5 name="download" size={18} color="#3498db" style={styles.modelDownloadIcon} />
                       )}
                     </View>
                   </TouchableOpacity>
@@ -175,6 +259,11 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
     marginBottom: 3,
   },
+  modelDescriptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   modelOptionDescription: {
     fontSize: 14,
     color: '#7f8c8d',
@@ -193,6 +282,9 @@ const styles = StyleSheet.create({
   },
   modelOptionTextContainer: {
     flex: 1,
+  },
+  hardwareIcon: {
+    marginLeft: 4,
   },
   modelReadyIcon: {
     fontSize: 18,

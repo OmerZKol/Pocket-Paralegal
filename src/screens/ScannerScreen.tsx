@@ -10,12 +10,14 @@ import { useDownloadedModels } from '../hooks/useDownloadedModels';
 import { AVAILABLE_MODELS } from '../constants/models';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { SettingsModal } from '../components/SettingsModal';
 
 interface ScannerScreenProps {
   selectedModelId: string;
   onSelectModel: (modelId: string) => void;
   onBack?: () => void;
   onScanComplete: (type: 'camera' | 'gallery' | 'file') => void;
+  loadedModelId?: string | null;
 }
 
 export function ScannerScreen({
@@ -23,9 +25,11 @@ export function ScannerScreen({
   onSelectModel,
   onBack,
   onScanComplete,
+  loadedModelId,
 }: ScannerScreenProps) {
   const [backgroundDownloadProgress, setBackgroundDownloadProgress] = useState<number>(0);
   const [isBackgroundDownloading, setIsBackgroundDownloading] = useState(false);
+  const [settingsVisible, setSettingsVisible] = useState(false);
   const previousModelRef = useRef<string | null>(null);
 
   // Get the selected model configuration
@@ -61,20 +65,6 @@ export function ScannerScreen({
       if (selectedModelId !== modelId) {
         // Check if the new model needs to be downloaded
         const newModel = AVAILABLE_MODELS.find(m => m.id === modelId);
-        if (newModel?.warning) {
-          Alert.alert(
-            "Hardware Requirements",
-            "Larger models require modern devices with good hardware (e.g., recent iPhone Pro models or equivalent). Performance may be slow on older devices.",
-            [
-              { text: "Cancel", style: "cancel" },
-              { 
-                text: "Continue", 
-                onPress: () => proceedWithModelSelection(modelId, newModel)
-              }
-            ]
-          );
-          return;
-        }
         await proceedWithModelSelection(modelId, newModel);
       }
     } catch (error) {
@@ -154,6 +144,16 @@ export function ScannerScreen({
     onBack?.();
   };
 
+  const handleSettingsPress = () => {
+    setSettingsVisible(true);
+  };
+
+  const handleSettingsClose = () => {
+    setSettingsVisible(false);
+    // Refresh downloaded models list when settings closes
+    refreshDownloadedModels();
+  };
+
   return (
     <ErrorBoundary>
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -168,6 +168,9 @@ export function ScannerScreen({
               <Text style={styles.title}>Pocket Paralegal <FontAwesome5 name="balance-scale" size={20} color="#fff" /></Text>
               <Text style={styles.subtitle}>Powered by Arm ExecuTorch</Text>
             </View>
+            <TouchableOpacity onPress={handleSettingsPress} style={styles.settingsButton}>
+              <Ionicons name="settings-outline" size={24} color="white" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -183,6 +186,7 @@ export function ScannerScreen({
               disabled={false}
               loadingMessage={'Select your AI model'}
               isModelDownloaded={isModelDownloaded}
+              loadedModelId={loadedModelId}
             />
 
             <View style={styles.scanButtonsContainer}>
@@ -224,6 +228,11 @@ export function ScannerScreen({
             )}
           </View>
         </View>
+
+        <SettingsModal
+          visible={settingsVisible}
+          onClose={handleSettingsClose}
+        />
       </SafeAreaView>
     </ErrorBoundary>
   );
@@ -234,6 +243,7 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 24, backgroundColor: '#1a2332' },
   headerContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255, 255, 255, 0.1)', justifyContent: 'center', alignItems: 'center' },
+  settingsButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255, 255, 255, 0.1)', justifyContent: 'center', alignItems: 'center' },
   headerTitles: { flex: 1 },
   title: { fontSize: 20, fontWeight: 'bold', color: 'white' },
   subtitle: { color: 'rgba(255, 255, 255, 0.7)', marginTop: 2, fontSize: 12 },
