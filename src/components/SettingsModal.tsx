@@ -180,7 +180,7 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
                 <FontAwesome5 name="database" size={40} color="rgba(255, 255, 255, 0.3)" />
                 <Text style={styles.emptyText}>No models downloaded yet</Text>
                 <Text style={styles.emptySubtext}>
-                  Download models from the scanner screen
+                  Download models from the model selection screen
                 </Text>
               </View>
             ) : (
