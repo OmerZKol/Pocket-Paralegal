@@ -80,8 +80,8 @@ This only works because modern phones are very powerful. The app runs a real lan
 
 ---
 
-### 🎥 Demo Video
-NOTE FOR ME: PUT DEMO VIDEO LINK HERE
+### Demo Video
+https://www.youtube.com/watch?v=oGZQVHRlc38
 
-### 📄 License
+### License
 MIT License - Free for the community to use and build upon.
